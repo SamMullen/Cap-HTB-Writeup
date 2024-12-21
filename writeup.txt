@@ -1,0 +1,55 @@
+HOST = 10.10.10.245
+
+nmap scanner
+21/tcp ftp
+22/tcp ssh
+80/tcp http
+
+Service Versions/Potential Exploits:
+ftp - vsftpd 3.0.0
+	DOS - CVE-2021-30047
+ssh - openssh 8.2p1
+http - gunicorn
+
+Web interface:
+Auto logged in as Nathan
+Can download a pcap file, that is about it
+pcap file is labeled #1, cannot increment up any further
+was able to manipulate the url to download pcap #0
+
+Wireshark:
+Opened pcap0 in Wireshark
+there are FTP login request packets shown
+password stored in cleartext for Nathan - Buck3tH4TF0RM3!
+
+FTP:
+logged in as Nathan to the host
+drops into /home/nathan/
+user.txt flag is in here
+grabbed this from ftp
+cannot send linpeas over ftp
+
+SSH:
+ssh connection is successful with the same username
+nathan cannot run sudo on this device
+sent linpeas over scp using these credentials to ~/
+in ssh, running linpeas now to look for priv esc
+two vulnerbilities that need attention according to linpeas
+	"Vulnerable to CVE-2021-3560"
+	/usr/bin/python3.8 = cap_setuid,cap_net_bind_service+eip
+
+CVE-2021-3560 - Polkit-Privilege-Esclation
+uploaded poc.sh to the host via scp route
+running bash poc.sh -u=nathan -p=Buck3tH4TF0RM3!
+this runs into an error, [x] ERROR: Accounts service and Gnome-Control-Center NOT found!!
+moving on to /usr/bin/python3.8 vuln for now
+
+/usr/bin/python3.8
+using python3.8, we are able to import os and set the uid to 0 (root)
+python3.8 -c 'import os; os.setuid(0); os.system("/bin/bash")'
+This gets us root access
+cat /root/root.txt
+
+Running User List:
+Nathan (logged in by default) : ftp user nathan:Buck3tH4TF0RM3!
+root
